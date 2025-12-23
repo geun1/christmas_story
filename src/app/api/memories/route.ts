@@ -24,7 +24,13 @@ async function getMemoriesData(): Promise<MemoryData[]> {
       return [];
     }
 
-    const response = await fetch(dataBlob.url);
+    // 캐시 비활성화하여 최신 데이터 가져오기
+    const response = await fetch(dataBlob.url, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    });
     const data = await response.json();
     return data;
   } catch (error) {
@@ -34,6 +40,18 @@ async function getMemoriesData(): Promise<MemoryData[]> {
 }
 
 async function saveMemoriesData(memories: MemoryData[]): Promise<void> {
+  // 기존 JSON 파일 삭제 후 새로 저장 (덮어쓰기 문제 해결)
+  try {
+    const { blobs } = await list({ prefix: 'memories/data' });
+    const existingBlob = blobs.find(b => b.pathname === MEMORIES_JSON_KEY);
+    if (existingBlob) {
+      await del(existingBlob.url);
+    }
+  } catch (e) {
+    // 삭제 실패해도 계속 진행
+    console.error('Failed to delete old data.json:', e);
+  }
+
   await put(MEMORIES_JSON_KEY, JSON.stringify(memories), {
     access: 'public',
     addRandomSuffix: false,
