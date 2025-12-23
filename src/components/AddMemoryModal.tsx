@@ -7,13 +7,15 @@ import { useEffect, useState, useRef } from 'react';
 interface AddMemoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (memory: Omit<Memory, 'id'>) => void;
+  onAdd: (memory: Omit<Memory, 'id'>) => Promise<Memory | null>;
+  isLoading?: boolean;
 }
 
 export default function AddMemoryModal({
   isOpen,
   onClose,
   onAdd,
+  isLoading = false,
 }: AddMemoryModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const [date, setDate] = useState('');
@@ -90,19 +92,28 @@ export default function AddMemoryModal({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!date || !title || !imageUrl) return;
+    if (!date || !title || !imageUrl || isSubmitting) return;
 
-    onAdd({
-      date,
-      title,
-      description,
-      imageUrl,
-      position: { x: 0, y: 0 },
-    });
+    setIsSubmitting(true);
+    try {
+      const result = await onAdd({
+        date,
+        title,
+        description,
+        imageUrl,
+        position: { x: 0, y: 0 },
+      });
 
-    handleClose();
+      if (result) {
+        handleClose();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -145,14 +156,14 @@ export default function AddMemoryModal({
 
       {/* Modal Content */}
       <div
-        className={`relative w-full max-w-md mx-4 rounded-t-[32px] sm:rounded-[32px] overflow-hidden ${
+        className={`relative w-full max-w-md mx-6 rounded-t-[32px] sm:rounded-[32px] overflow-hidden ${
           isClosing ? 'modal-exit' : 'modal-enter'
         }`}
         style={{
           background: 'linear-gradient(165deg, rgba(45,45,80,0.95) 0%, rgba(25,25,50,0.98) 100%)',
           boxShadow: '0 -10px 60px -10px rgba(99,102,241,0.3), 0 0 0 1px rgba(255,255,255,0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
           border: '1px solid rgba(255,255,255,0.12)',
-          maxHeight: '92vh',
+          maxHeight: '90vh',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -170,30 +181,30 @@ export default function AddMemoryModal({
         </div>
 
         {/* Header */}
-        <div className="relative px-6 pt-4 pb-3">
+        <div className="relative px-7 pt-6 pb-4">
           <div className="flex items-start justify-between">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-3 mb-2">
                 <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
                   style={{
                     background: 'linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,140,0,0.2) 100%)',
                     border: '1px solid rgba(255,215,0,0.3)',
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-yellow-400">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-yellow-400">
                     <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
                   </svg>
                 </div>
                 <h2 className="text-xl font-bold text-white">새로운 추억</h2>
               </div>
-              <p className="text-white/40 text-xs pl-10">트리에 걸 소중한 순간</p>
+              <p className="text-white/40 text-xs pl-[52px]">트리에 걸 소중한 순간</p>
             </div>
             <button
               onClick={handleClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </button>
@@ -201,7 +212,7 @@ export default function AddMemoryModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 pb-8 pt-2 space-y-5 overflow-y-auto" style={{ maxHeight: 'calc(92vh - 100px)' }}>
+        <form onSubmit={handleSubmit} className="px-7 pb-8 pt-2 space-y-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
           {/* Image Upload */}
           <div
             onClick={() => fileInputRef.current?.click()}
@@ -356,18 +367,18 @@ export default function AddMemoryModal({
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={!isValid}
+            disabled={!isValid || isSubmitting}
             className="relative w-full py-4 rounded-2xl font-bold text-base transition-all overflow-hidden group disabled:cursor-not-allowed"
             style={{
-              background: isValid
+              background: isValid && !isSubmitting
                 ? 'linear-gradient(135deg, #ffd700 0%, #ff8c00 50%, #ff6b6b 100%)'
                 : 'rgba(255,255,255,0.05)',
-              color: isValid ? '#1a1a2e' : 'rgba(255,255,255,0.25)',
-              boxShadow: isValid ? '0 10px 40px -10px rgba(255,215,0,0.5)' : 'none',
+              color: isValid && !isSubmitting ? '#1a1a2e' : 'rgba(255,255,255,0.25)',
+              boxShadow: isValid && !isSubmitting ? '0 10px 40px -10px rgba(255,215,0,0.5)' : 'none',
             }}
           >
             {/* Shine effect */}
-            {isValid && (
+            {isValid && !isSubmitting && (
               <div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
                 style={{
@@ -377,7 +388,12 @@ export default function AddMemoryModal({
               />
             )}
             <span className="relative flex items-center justify-center gap-2">
-              {isValid ? (
+              {isSubmitting ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  업로드 중...
+                </>
+              ) : isValid ? (
                 <>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>

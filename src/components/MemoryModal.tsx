@@ -61,7 +61,7 @@ export default function MemoryModal({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-enter`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-enter`}
       onClick={handleClose}
       style={{ background: 'rgba(0,0,0,0.7)' }}
     >
@@ -109,9 +109,9 @@ export default function MemoryModal({
         </div>
 
         {/* Content */}
-        <div className="px-6 pb-6 -mt-8 relative z-10">
+        <div className="px-7 pb-7 -mt-8 relative z-10">
           {/* Date badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-400/20 border border-yellow-400/30 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-400/20 border border-yellow-400/30 mb-5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yellow-400">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
@@ -124,7 +124,7 @@ export default function MemoryModal({
           </div>
 
           {/* Title */}
-          <h2 className="text-2xl font-bold text-white mb-3 leading-tight">
+          <h2 className="text-2xl font-bold text-white mb-4 leading-tight">
             {memory.title}
           </h2>
 
@@ -136,7 +136,7 @@ export default function MemoryModal({
           )}
 
           {/* Heart decoration */}
-          <div className="flex justify-center py-4 border-t border-white/10">
+          <div className="flex justify-center py-5 border-t border-white/10">
             <div className="flex items-center gap-2 text-white/40 text-xs">
               <span>소중한 우리의 추억</span>
               <span className="text-red-400 heart-beat">&#10084;</span>

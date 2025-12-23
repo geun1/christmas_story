@@ -1,56 +1,102 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Memory } from '@/types';
-
-const STORAGE_KEY = 'christmas-memories-2024';
 
 export function useMemories() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setMemories(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to parse memories:', e);
+  // 모든 추억 가져오기
+  const fetchMemories = useCallback(async () => {
+    try {
+      const response = await fetch('/api/memories');
+      if (response.ok) {
+        const data = await response.json();
+        setMemories(data);
       }
+    } catch (error) {
+      console.error('Failed to fetch memories:', error);
+    } finally {
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
+    fetchMemories();
+  }, [fetchMemories]);
+
+  // 새 추억 추가
+  const addMemory = async (
+    memory: Omit<Memory, 'id'>,
+    imageFile?: File
+  ): Promise<Memory | null> => {
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+
+      if (imageFile) {
+        formData.append('image', imageFile);
+      } else if (memory.imageUrl.startsWith('data:')) {
+        // base64를 Blob으로 변환
+        const response = await fetch(memory.imageUrl);
+        const blob = await response.blob();
+        formData.append('image', blob, 'image.jpg');
+      }
+
+      formData.append('date', memory.date);
+      formData.append('title', memory.title);
+      formData.append('description', memory.description || '');
+      formData.append('positionX', String(memory.position.x));
+      formData.append('positionY', String(memory.position.y));
+
+      const res = await fetch('/api/memories', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (res.ok) {
+        const newMemory = await res.json();
+        setMemories((prev) => [...prev, newMemory]);
+        return newMemory;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to add memory:', error);
+      return null;
+    } finally {
+      setIsLoading(false);
     }
-  }, [memories, isLoaded]);
-
-  const addMemory = (memory: Omit<Memory, 'id'>) => {
-    const newMemory: Memory = {
-      ...memory,
-      id: Date.now().toString(),
-    };
-    setMemories((prev) => [...prev, newMemory]);
-    return newMemory;
   };
 
-  const updateMemory = (id: string, updates: Partial<Memory>) => {
-    setMemories((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, ...updates } : m))
-    );
-  };
+  // 추억 삭제
+  const deleteMemory = async (id: string): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/memories?id=${id}`, {
+        method: 'DELETE',
+      });
 
-  const deleteMemory = (id: string) => {
-    setMemories((prev) => prev.filter((m) => m.id !== id));
+      if (res.ok) {
+        setMemories((prev) => prev.filter((m) => m.id !== id));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to delete memory:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return {
     memories,
     isLoaded,
+    isLoading,
     addMemory,
-    updateMemory,
     deleteMemory,
+    refetch: fetchMemories,
   };
 }

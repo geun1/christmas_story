@@ -11,7 +11,7 @@ import AddMemoryModal from '@/components/AddMemoryModal';
 import StoryView from '@/components/StoryView';
 
 export default function Home() {
-  const { memories, isLoaded, addMemory, deleteMemory } = useMemories();
+  const { memories, isLoaded, isLoading, addMemory, deleteMemory } = useMemories();
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -26,8 +26,8 @@ export default function Home() {
     setIsAddModalOpen(true);
   };
 
-  const handleAddMemory = (memory: Omit<Memory, 'id'>) => {
-    addMemory(memory);
+  const handleAddMemory = async (memory: Omit<Memory, 'id'>) => {
+    return await addMemory(memory);
   };
 
   const handleDeleteMemory = (id: string) => {
@@ -78,7 +78,7 @@ export default function Home() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 px-4 pb-28">
+      <div className="relative z-10 px-6 pb-32">
         {/* Header */}
         <Header />
 
@@ -94,7 +94,7 @@ export default function Home() {
       {memories.length > 0 && (
         <button
           onClick={() => setIsStoryMode(true)}
-          className="fixed top-6 right-6 z-40 flex items-center gap-2 px-4 py-2.5 rounded-full transition-all active:scale-95"
+          className="fixed top-8 right-8 z-40 flex items-center gap-3 px-5 py-3 rounded-full transition-all active:scale-95"
           style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
             backdropFilter: 'blur(10px)',
@@ -112,14 +112,14 @@ export default function Home() {
       {/* Floating Add Button */}
       <button
         onClick={handleAddClick}
-        className="add-button fixed bottom-6 right-6 w-14 h-14 rounded-full text-3xl font-light z-40 flex items-center justify-center transition-transform active:scale-95"
+        className="add-button fixed bottom-8 right-8 w-16 h-16 rounded-full text-3xl font-light z-40 flex items-center justify-center transition-transform active:scale-95"
         style={{
           background: 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)',
           color: '#1a1a2e',
           boxShadow: '0 8px 30px -5px rgba(255, 215, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1)',
         }}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <line x1="12" y1="5" x2="12" y2="19" />
           <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
@@ -127,14 +127,14 @@ export default function Home() {
 
       {/* Memory Count Badge */}
       <div
-        className="fixed bottom-6 left-6 px-4 py-2 rounded-full z-40"
+        className="fixed bottom-8 left-8 px-5 py-2.5 rounded-full z-40"
         style={{
           background: 'rgba(255,255,255,0.08)',
           backdropFilter: 'blur(10px)',
           border: '1px solid rgba(255,255,255,0.1)',
         }}
       >
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <div
             className="w-2 h-2 rounded-full"
             style={{ background: 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)' }}
@@ -142,7 +142,7 @@ export default function Home() {
           <span className="text-white/70 text-sm font-medium">
             {memories.length}개의 추억
           </span>
-        </div>
+        </div> */}
       </div>
 
       {/* Memory View Modal */}
@@ -158,6 +158,7 @@ export default function Home() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddMemory}
+        isLoading={isLoading}
       />
     </main>
   );
