@@ -2,7 +2,13 @@
 
 import { Memory } from '@/types';
 import Image from 'next/image';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+
+// 안정적인 랜덤 값 생성 (seed 기반)
+function seededRandom(seed: number) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
 
 interface StoryViewProps {
   memories: Memory[];
@@ -44,6 +50,18 @@ export default function StoryView({ memories, onClose }: StoryViewProps) {
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isLetterOpened, setIsLetterOpened] = useState(false);
+
+  // 안정적인 장식 요소 생성 (hydration 불일치 방지)
+  const decorativeElements = useMemo(() => {
+    return [...Array(20)].map((_, i) => ({
+      width: 2 + seededRandom(i * 1) * 4,
+      height: 2 + seededRandom(i * 2) * 4,
+      left: seededRandom(i * 3) * 100,
+      top: seededRandom(i * 4) * 100,
+      duration: 2 + seededRandom(i * 5) * 2,
+      delay: seededRandom(i * 6) * 2,
+    }));
+  }, []);
 
   const sortedMemories = [...memories].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -172,19 +190,19 @@ export default function StoryView({ memories, onClose }: StoryViewProps) {
           >
             {/* Decorative elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(20)].map((_, i) => (
+              {decorativeElements.map((el, i) => (
                 <div
                   key={i}
                   className="absolute rounded-full"
                   style={{
-                    width: `${2 + Math.random() * 4}px`,
-                    height: `${2 + Math.random() * 4}px`,
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 100}%`,
+                    width: `${el.width}px`,
+                    height: `${el.height}px`,
+                    left: `${el.left}%`,
+                    top: `${el.top}%`,
                     background: 'rgba(255,215,0,0.3)',
                     boxShadow: '0 0 10px rgba(255,215,0,0.5)',
-                    animation: `twinkle ${2 + Math.random() * 2}s ease-in-out infinite`,
-                    animationDelay: `${Math.random() * 2}s`,
+                    animation: `twinkle ${el.duration}s ease-in-out infinite`,
+                    animationDelay: `${el.delay}s`,
                   }}
                 />
               ))}
@@ -285,19 +303,19 @@ export default function StoryView({ memories, onClose }: StoryViewProps) {
         >
           {/* Decorative elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(20)].map((_, i) => (
+            {decorativeElements.map((el, i) => (
               <div
                 key={i}
                 className="absolute rounded-full"
                 style={{
-                  width: `${2 + Math.random() * 4}px`,
-                  height: `${2 + Math.random() * 4}px`,
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
+                  width: `${el.width}px`,
+                  height: `${el.height}px`,
+                  left: `${el.left}%`,
+                  top: `${el.top}%`,
                   background: 'rgba(255,215,0,0.3)',
                   boxShadow: '0 0 10px rgba(255,215,0,0.5)',
-                  animation: `twinkle ${2 + Math.random() * 2}s ease-in-out infinite`,
-                  animationDelay: `${Math.random() * 2}s`,
+                  animation: `twinkle ${el.duration}s ease-in-out infinite`,
+                  animationDelay: `${el.delay}s`,
                 }}
               />
             ))}
